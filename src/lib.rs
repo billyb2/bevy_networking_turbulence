@@ -100,8 +100,8 @@ impl Plugin for NetworkingPlugin {
 pub struct NetworkResource {
     task_pool: TaskPool,
 
-    pending_connections: Arc<Mutex<Vec<Box<dyn Connection>>>>,
-    connection_sequence: atomic::AtomicU32,
+    pub pending_connections: Arc<Mutex<Vec<Box<dyn Connection>>>>,
+    pub connection_sequence: atomic::AtomicU32,
     pub connections: HashMap<ConnectionHandle, Box<dyn Connection>>,
 
     #[cfg(not(target_arch = "wasm32"))]
@@ -109,9 +109,9 @@ pub struct NetworkResource {
     #[cfg(not(target_arch = "wasm32"))]
     server_channels: Arc<RwLock<HashMap<SocketAddr, Sender<Result<Packet, NetworkError>>>>>,
 
-    runtime: TaskPoolRuntime,
-    packet_pool: MuxPacketPool<BufferPacketPool<SimpleBufferPool>>,
-    channels_builder_fn: Option<Box<dyn Fn(&mut ConnectionChannelsBuilder) + Send + Sync>>,
+    pub runtime: TaskPoolRuntime,
+    pub packet_pool: MuxPacketPool<BufferPacketPool<SimpleBufferPool>>,
+    pub channels_builder_fn: Option<Box<dyn Fn(&mut ConnectionChannelsBuilder) + Send + Sync>>,
     message_flushing_strategy: MessageFlushingStrategy,
     idle_timeout_ms: Option<usize>,
     auto_heartbeat_ms: Option<usize>,
