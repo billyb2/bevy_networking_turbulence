@@ -194,7 +194,7 @@ impl NetworkResource {
     {
         let runtime = TaskPoolRuntime::new(task_pool.clone());
         let packet_pool =
-            MuxPacketPool::new(BufferPacketPool::new(SimpleBufferPool(MAX_PACKET_LEN)));
+            MuxPacketPool::new(BufferPacketPool::new(SimpleBufferPool(MAX_PACKET_LEN.into())));
 
         NetworkResource {
             task_pool,
