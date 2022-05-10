@@ -1,5 +1,5 @@
 use bevy::{
-    app::{App, EventReader, ScheduleRunnerSettings, CoreStage},
+    app::{App, ScheduleRunnerSettings, CoreStage},
     ecs::prelude::*,
     MinimalPlugins,
     core::{FixedTimestep},
@@ -44,7 +44,7 @@ fn main() {
         pong_reservoir: args.pongs,
     };
 
-    let mut app = App::build();
+    let mut app = App::new();
     app
         // minimal plugins necessary for timers + headless loop
         .insert_resource(ScheduleRunnerSettings::run_loop(Duration::from_secs_f64(
@@ -56,10 +56,10 @@ fn main() {
         .add_plugin(net_plugin)
         // Our networking
         .insert_resource(args)
-        .add_startup_system(startup.system())
-        .add_system(send_pongs.system())
+        .add_startup_system(startup)
+        .add_system(send_pongs)
         .add_stage_after(CoreStage::Update, "ping_sending_stage",
-            SystemStage::single(send_pings.system()).with_run_criteria(FixedTimestep::step(1.0)))
+            SystemStage::single(send_pings).with_run_criteria(FixedTimestep::step(1.0)))
         ;
     app.run();
 }

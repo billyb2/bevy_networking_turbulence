@@ -1,5 +1,5 @@
 use bevy::{
-    app::{App, EventReader, ScheduleRunnerSettings},
+    app::{App, ScheduleRunnerSettings},
     core::Time,
     ecs::prelude::*,
     MinimalPlugins,
@@ -26,7 +26,7 @@ fn main() {
         }
     }
 
-    App::build()
+    App::new()
         // minimal plugins necessary for timers + headless loop
         .insert_resource(ScheduleRunnerSettings::run_loop(Duration::from_secs_f64(
             1.0 / 60.0,
@@ -36,9 +36,9 @@ fn main() {
         .add_plugin(NetworkingPlugin::default())
         // Our networking
         .insert_resource(parse_simple_args())
-        .add_startup_system(startup.system())
-        .add_system(send_packets.system())
-        .add_system(handle_packets.system())
+        .add_startup_system(startup)
+        .add_system(send_packets)
+        .add_system(handle_packets)
         .run();
 }
 
@@ -69,11 +69,9 @@ fn startup(mut net: ResMut<NetworkResource>, args: Res<Args>) {
 }
 
 fn send_packets(mut net: ResMut<NetworkResource>, time: Res<Time>, args: Res<Args>) {
-    if !args.is_server {
-        if (time.seconds_since_startup() * 60.) as i64 % 60 == 0 {
-            log::info!("PING");
-            net.broadcast(Packet::from("PING"));
-        }
+    if !args.is_server && (time.seconds_since_startup() * 60.) as i64 % 60 == 0 {
+        log::info!("PING");
+        net.broadcast(Packet::from("PING"));
     }
 }
 fn handle_packets(

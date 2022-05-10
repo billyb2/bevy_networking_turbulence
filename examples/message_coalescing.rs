@@ -1,5 +1,5 @@
 use bevy::{
-    app::{App, ScheduleRunnerSettings, AppExit, EventWriter, CoreStage},
+    app::{App, ScheduleRunnerSettings, AppExit, CoreStage},
     core::Time,
     ecs::prelude::*,
     MinimalPlugins,
@@ -11,6 +11,7 @@ use bevy_networking_turbulence::{
     ConnectionChannelsBuilder, MessageChannelMode, MessageChannelSettings,
     NetworkResource, NetworkingPlugin, MessageFlushingStrategy,
 };
+use turbulence::unreliable_channel;
 
 use std::{net::SocketAddr, time::Duration};
 
@@ -51,7 +52,7 @@ fn main() {
         net_plugin.message_flushing_strategy = MessageFlushingStrategy::Never;
     }
 
-    let mut app = App::build();
+    let mut app = App::new();
     app
         // minimal plugins necessary for timers + headless loop
         .insert_resource(ScheduleRunnerSettings::run_loop(Duration::from_secs_f64(
@@ -65,15 +66,15 @@ fn main() {
         .add_plugin(net_plugin)
         // Our networking
         .insert_resource(args)
-        .add_startup_system(startup.system())
-        .add_startup_system(setup_channels.system())
-        .add_system(tick.system())
-        .add_system(send_messages.system())
-        .add_system(handle_messages.system())
-        .add_system(ttl_system.system())
+        .add_startup_system(startup)
+        .add_startup_system(setup_channels)
+        .add_system(tick)
+        .add_system(send_messages)
+        .add_system(handle_messages)
+        .add_system(ttl_system)
         ;
     if parse_message_coalescing_args().manual_flush {
-        app.add_system_to_stage(CoreStage::PostUpdate, flush_channels.system());
+        app.add_system_to_stage(CoreStage::PostUpdate, flush_channels);
     }
     app.run();
 }
@@ -86,7 +87,13 @@ enum NetMsg {
 
 const NETMSG_SETTINGS: MessageChannelSettings = MessageChannelSettings {
     channel: 0,
-    channel_mode: MessageChannelMode::Unreliable,   
+    channel_mode: MessageChannelMode::Unreliable{
+        settings: unreliable_channel::Settings {
+            bandwidth: 4096,
+            burst_bandwidth: 1024,
+        },
+        max_message_len: 256,
+    },
     // The buffer size for the mpsc channel of messages that transports messages of this type to /
     // from the network task.
     message_buffer_size: NUM_PINGS,

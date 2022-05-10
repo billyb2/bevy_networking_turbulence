@@ -1,9 +1,10 @@
 use bevy::{
-    app::{App, Events, Plugin, CoreStage},
+    app::{App, Plugin, CoreStage},
     ecs::prelude::*,
     tasks::{IoTaskPool, TaskPool, Task},
     core::FixedTimestep,
 };
+use bevy::ecs::event::Events;
 
 #[cfg(not(target_arch = "wasm32"))]
 use crossbeam_channel::{unbounded, Receiver, Sender, SendError as CrossbeamSendError};
@@ -85,13 +86,13 @@ impl Plugin for NetworkingPlugin {
             self.auto_heartbeat_ms,
         ))
         .add_event::<NetworkEvent>()
-        .add_system(receive_packets.system());
+        .add_system(receive_packets);
         if self.idle_timeout_ms.is_some() || self.auto_heartbeat_ms.is_some() {
             // heartbeats and timeouts checking/sending only runs infrequently:
             app.add_stage_after(CoreStage::Update, SendHeartbeatsStage,
                 SystemStage::parallel()
                 .with_run_criteria(FixedTimestep::step(self.heartbeats_and_timeouts_timestep_in_seconds.unwrap_or(0.5)))
-                .with_system(heartbeats_and_timeouts.system())
+                .with_system(heartbeats_and_timeouts)
             );
         }
     }
@@ -167,7 +168,7 @@ pub enum MessageFlushingStrategy {
     ///     }
     /// }
     /// ...
-    /// builder.add_system_to_stage(CoreStage::PostUpdate, flush_channels.system());
+    /// builder.add_system_to_stage(CoreStage::PostUpdate, flush_channels);
     ///
     Never,
 }
